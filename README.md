@@ -9,12 +9,13 @@ all the way to the bottom and edit the latitude, longitude, and zoom. At the
 moment, I'm stuck with the height lookup tables, getting correct height values
 for Oakland but too-small values for San Francisco.
 
-#Changes by Mikiex
-#Outputs multiple tiles, you specify X and Y amount in the Tiles.py file (example is 8x8)
-#outputs OBJ Mtl file, so JPEGS are imported with OBJ (Tested in 3ds Max import)
-#Issues:
-#All tiles are at origin 0,0,0 (so need moving in 3D app)
-#Some tiles may be duplicated because position of the next tile is a fixed value.
+Changes by Mikiex
+=================
+Outputs multiple tiles, you specify X and Y amount in the Tiles.py file (example is 8x8)
+outputs OBJ Mtl file, so JPEGS are imported with OBJ (Tested in 3ds Max import)
+Issues:
+All tiles are at origin 0,0,0 (so need moving in 3D app)
+Some tiles may be duplicated because position of the next tile is a fixed value.
 
 #Note possibly this and the original requied PIL to be installed.
 
