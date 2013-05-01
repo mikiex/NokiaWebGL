@@ -274,40 +274,85 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG, format='%(filename)s %(lineno)d - %(msg)s')
 
-    p = get_projection()
     
-    if len(argv) == 1:
-        lat, lon = 37.804310, -122.271164
-        zoom = 16
+    def GetData(latx,lonx,zoomx):
+        p = get_projection()
+        
+        if len(argv) == 1:
+            lat, lon = latx, lonx
+            zoom = zoomx
 
-    elif len(argv) == 4:
-        lat, lon = map(float, argv[1:3])
-        zoom = int(argv[3])
+        elif len(argv) == 4:
+            lat, lon = map(float, argv[1:3])
+            zoom = int(argv[3])
 
-    else:
-        raise Exception('oops')
+        else:
+            raise Exception('oops')
     
-    loc = Location(lat, lon)
-    coord = p.locationCoordinate(loc).zoomTo(zoom)
+        loc = Location(lat, lon)
+        coord = p.locationCoordinate(loc).zoomTo(zoom)
     
-    textures = get_tile_data(coord)
+        return coord
+   
     
     #
     # Output .obj files and JPEGs locally.
     #
-    
-    for (index, (vertices, faces, image_url)) in enumerate(textures):
+    def OutputTile(coord,textures,objnum):
+        for (index, (vertices, faces, image_url)) in enumerate(textures):
+            
+            #coordstr = (str(coord.row) +"_"+ str(coord.column)+"_"+str(coord.zoom))
+            coordstr = str(objnum)+"_OBJECT"#simpler filename
+            
+            obj = open('out_%s_%d.obj' % (coordstr,index), 'w')
 
-        obj = open('out-%d.obj' % index, 'w')
+            mtl = open('out_%s_%d.mtl' % (coordstr,index), 'w')
+            #material file
+            print >> mtl, 'newmtl out_%s_%d_mat' % (coordstr,index) #material name
+            print >> mtl, 'map_Ka out_%s_%d.jpg' % (coordstr,index) #ambient texture
+            print >> mtl, 'map_Kd out_%s_%d.jpg' % (coordstr,index) #diffuse texture
+            # material lib name
+            print >> obj, 'mtllib out_%s_%d.mtl' % (coordstr,index)
+            # object name
+            print >> obj, 'g out_%s_%d' % (coordstr,index)
+            # material to use
+            print >> obj, 'usemtl out_%s_%d_mat' % (coordstr,index)
+            # object file
+            for (x, y, z, u, v) in vertices:
+                print >> obj, 'v %.1f %.1f %.1f' % (x, y, z)
+            
+            for (x, y, z, u, v) in vertices:
+                print >> obj, 'vt %.6f %.6f' % (u, v)
+            
+            for (v0, v1, v2) in faces:
+                print >> obj, 'f %d/%d %d/%d %d/%d' % (v0+1, v0+1, v1+1, v1+1, v2+1, v2+1)
         
-        for (x, y, z, u, v) in vertices:
-            print >> obj, 'v %.1f %.1f %.1f' % (x, y, z)
+            jpg = open('out_%s_%d.jpg' % (coordstr,index), 'wb')
+            jpg.write(urlopen(image_url).read())
+
+#the starting point in world Longitude and Latitude (example here is in LA)
+StLatOrig = 34.067720
+StLonOrig = -118.401339
+StLat = StLatOrig
+StLon = StLonOrig
+
+#Here is where you could be very clever and work out the offset of a tile
+#Its more complicated than it sounds because of spherical coords so these numbers
+#are from trail and error, also you may get duplicate tiles - which you could check for
+#But I didnt bother.
+LonInc = -0.000600
+LatInc = 0.000600
+
+#Example out put 8x8 tiles at a zoom level of 19 (the highest)
+for x in range(8):
+    for y in range(8):
         
-        for (x, y, z, u, v) in vertices:
-            print >> obj, 'vt %.6f %.6f' % (u, v)
-        
-        for (v0, v1, v2) in faces:
-            print >> obj, 'f %d/%d %d/%d %d/%d' % (v0+1, v0+1, v1+1, v1+1, v2+1, v2+1)
-        
-        jpg = open('out-%d.jpg' % index, 'w')
-        jpg.write(urlopen(image_url).read())
+        logging.debug(str(x)+" "+str(y))
+        coordx = GetData(StLat,StLon,19)
+        texturesx = get_tile_data(coordx)
+        OutputTile(coordx,texturesx,"_XY_"+str(x)+"_"+str(y))
+        StLat = StLat + LatInc
+    logging.debug("INCREASE LON resetting Lat")
+    StLat = StLatOrig
+    StLon = StLon + LonInc
+  
