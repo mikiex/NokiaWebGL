@@ -298,7 +298,7 @@ if __name__ == '__main__':
     #
     # Output .obj files and JPEGs locally.
     #
-    def OutputTile(coord,textures,objnum):
+    def OutputTile(coord,textures,objnum,offsetx,offsety):
         for (index, (vertices, faces, image_url)) in enumerate(textures):
             
             #coordstr = (str(coord.row) +"_"+ str(coord.column)+"_"+str(coord.zoom))
@@ -319,7 +319,7 @@ if __name__ == '__main__':
             print >> obj, 'usemtl out_%s_%d_mat' % (coordstr,index)
             # object file
             for (x, y, z, u, v) in vertices:
-                print >> obj, 'v %.1f %.1f %.1f' % (x, y, z)
+                print >> obj, 'v %.1f %.1f %.1f' % (x+offsetx, y+offsety, z)
             
             for (x, y, z, u, v) in vertices:
                 print >> obj, 'vt %.6f %.6f' % (u, v)
@@ -331,8 +331,10 @@ if __name__ == '__main__':
             jpg.write(urlopen(image_url).read())
 
 #the starting point in world Longitude and Latitude (example here is in LA)
-StLatOrig = 34.067720
-StLonOrig = -118.401339
+#StLatOrig = 34.067720 #Rodeo Drive
+#StLonOrig = -118.401339 #Rodeo Drive
+StLatOrig = 33.984861
+StLonOrig = -118.475806
 StLat = StLatOrig
 StLon = StLonOrig
 
@@ -340,17 +342,21 @@ StLon = StLonOrig
 #Its more complicated than it sounds because of spherical coords so these numbers
 #are from trail and error, also you may get duplicate tiles - which you could check for
 #But I didnt bother.
-LonInc = -0.000600
-LatInc = 0.000600
+LonInc = 0.000500
+LatInc = 0.000500
 
-#Example out put 8x8 tiles at a zoom level of 19 (the highest)
+#offset each tiles world pos so we dont have to manually position them in 3dsMax
+OBJTileOffsetX = 256.0
+OBJTileOffsetY = 256.0
+
+#Example out put 8x8 tiles at a zoom level of 19 (the highest AFAIK)
 for x in range(8):
     for y in range(8):
         
         logging.debug(str(x)+" "+str(y))
         coordx = GetData(StLat,StLon,19)
         texturesx = get_tile_data(coordx)
-        OutputTile(coordx,texturesx,"_XY_"+str(x)+"_"+str(y))
+        OutputTile(coordx,texturesx,"_XY_"+str(x)+"_"+str(y),OBJTileOffsetX*x,OBJTileOffsetY*y)
         StLat = StLat + LatInc
     logging.debug("INCREASE LON resetting Lat")
     StLat = StLatOrig
