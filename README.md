@@ -1,3 +1,5 @@
+IMPORTANT NOTE: Nokia Maps now longer exists, so this project no longer works.
+
 Nokia 3D WebGL Maps
 ===================
 
